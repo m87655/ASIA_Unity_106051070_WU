@@ -22,7 +22,7 @@ public class Zombie : MonoBehaviour
     public Transform tran;
     public Rigidbody rig;
     public Animator ani;
-
+    public Rigidbody crt_rig;
     private void Update()
     {
         Turn();
@@ -30,13 +30,25 @@ public class Zombie : MonoBehaviour
         Bark();
         Catch();
     }
+    private void OnTriggerStay(Collider other)
+    {
+        if(other.name == "BeveledStar"&&ani.GetCurrentAnimatorStateInfo(0).IsName("跌倒"))
+        {
+            Physics.IgnoreCollision(other, GetComponent<Collider>());
+            other.GetComponent<HingeJoint>().connectedBody = crt_rig;
+        }
+        if(other.name == "Cube" && ani.GetCurrentAnimatorStateInfo(0).IsName("跌倒"))
+        {
+            GameObject.Find("BeveledStar").GetComponent<HingeJoint>().connectedBody = null;
+        }
+    }
 
     #region 方法區域
     /// <summary>
     /// 跑步
     /// </summary>
     private void Run()
-    {
+    {   if (ani.GetCurrentAnimatorStateInfo(0).IsName("攻擊")) return;
         float v = Input.GetAxis("Vertical");        // W 上 1、S 下 -1、沒按 0
         // rig.AddForce(0, 0, speed * v);           // 世界座標
         // tran.right   區域座標 X 軸
@@ -44,6 +56,7 @@ public class Zombie : MonoBehaviour
         // tran.forward 區域座標 Z 軸
         // Time.deltaTime 當下裝置一幀的時間
         rig.AddForce(tran.forward * speed * v * Time.deltaTime);     // 區域座標
+        ani.SetBool("走路開關", v != 0);
     }
 
     /// <summary>
@@ -63,7 +76,7 @@ public class Zombie : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.Space))
         {
             // 按下空白鍵拍翅膀
-            ani.SetTrigger("拍翅膀觸發器");
+            ani.SetTrigger("攻擊觸發器");
         }
     }
 
@@ -75,7 +88,7 @@ public class Zombie : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.Mouse0))
         {
             // 按下左鍵撿東西
-            ani.SetTrigger("撿東西觸發器");
+            ani.SetTrigger("跌倒觸發器");
         }
     }
 
